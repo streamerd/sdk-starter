@@ -1,10 +1,11 @@
-import { useCreateRevenuePath, useR3vlClient } from '@r3vl/sdk'
+import { useCreateRevenuePath, useR3vlClient, useWithdraw } from '@r3vl/sdk'
 import { useEffect, useState } from 'react'
-import { useNetwork, useProvider, useSigner } from 'wagmi'
+import { useNetwork, useProvider, useSigner, useAccount } from 'wagmi'
 
-const Form = ({ onCreateRevPath }) => {
+const Form = ({ onCreateRevPath, onCreateWithdrawal }) => {
   const [collabs, setCollabs] = useState({ wallets: ['0x538C138B73836b811c148B3E4c3683B7B923A0E7'], shares: [100] })
   const [error, setError] = useState(null)
+  const [revenuePathAddr, setRevenuePathAddr] = useState(null)
 
   useEffect(() => {
     const totalShare = collabs.shares.reduce((prev, share) => prev + share, 0)
@@ -80,6 +81,28 @@ const Form = ({ onCreateRevPath }) => {
         >
           Create Revenue Path!
         </button>
+        <br></br> <br></br>
+        {/* <input
+          // defaultValue={}
+          className="border-black-50 my-4 border"
+          placeholder="Revenue path address"
+          onChange={e => {
+            const rev = e.target.value
+            setRevenuePathAddr(rev)
+            // setRevenuePathAddr(e.target.value)
+          }}
+        /> */}
+        <button
+          className="bg-gray-500 p-2"
+          // onClick={() => {
+          //   onCreateWithdrawal(revenuePathAddr)
+          // }}
+          onClick={() => {
+            onCreateWithdrawal()
+          }}
+        >
+          Withdraw from Revenue Path
+        </button>
       </p>
       {error && <p style={{ color: 'red' }}>{error}</p>}
     </div>
@@ -90,6 +113,7 @@ const Sdk = () => {
   const provider = useProvider()
   const { data: signer } = useSigner()
   const { chain } = useNetwork()
+  const { address } = useAccount()
 
   useR3vlClient({
     chainId: chain?.id,
@@ -105,7 +129,22 @@ const Sdk = () => {
     console.log('Transaction result:', receipt)
   }
 
-  return <Form onCreateRevPath={onCreateRevPath} />
+  const withdraw = useWithdraw('0xEc6aC6962945fe2B21D163eD1355d2855D4FA1aC')
+
+  const onCreateWithdrawal = () => {
+    console.log('withdrawing from revenue path 0xEc6aC6962945fe2B21D163eD1355d2855D4FA1aC to ', address)
+    withdraw.mutate({
+      walletAddress: address,
+    })
+  }
+
+  // const onCreateWithdrawal = _revenuePathAddr => {
+  //   withdraw.mutate({
+  //     walletAddress: address,
+  //   })
+  // }
+
+  return <Form onCreateRevPath={onCreateRevPath} onCreateWithdrawal={onCreateWithdrawal} />
 }
 
 export default Sdk
